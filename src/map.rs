@@ -42,8 +42,6 @@ impl BlockMap {
             self.blocks[ldx] = BlockType::WALL;
             self.blocks[rdx] = BlockType::WALL;
         }
-        let idx = self.xy_to_index(3, 3);
-        self.blocks[idx] = BlockType::WALL;
     }
 
     #[allow(dead_code)]
