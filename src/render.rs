@@ -33,6 +33,17 @@ pub struct RenderState {
     room: BlockMap
 }
 
+fn compute_light(light: f64) -> [u8; 4]
+{
+    let mut r: u8 = 0x5e;
+    let mut g: u8 = 0x48;
+    let mut b: u8 = 0xe8;
+    r = (r as f64 * light).floor() as u8;
+    g = (g as f64 * light).floor() as u8;
+    b = (b as f64 * light).floor() as u8;
+    [r, g, b, 0xff]
+}
+
 impl RenderState {
     pub fn new() -> Self {
         let mut map = BlockMap::new(8, 8);
@@ -112,9 +123,8 @@ impl RenderState {
             let y = (i / RENDER_WIDTH as usize) as u32;
             let cd = &columns[x as usize];
             let col = {
-                // Prevent thrashing via non-linear indexing
                 if cd.column.contains(&y) {
-                    [0x5e, 0x48, 0xe8, 0xff]
+                    compute_light(cd.light)
                 } else if y <= RENDER_HEIGHT_MID {
                     [0xff, 0xff, 0xff, 0xff]
                 }  else {
