@@ -35,9 +35,9 @@ pub struct RenderState {
 
 fn compute_light(light: f64) -> [u8; 4]
 {
-    let mut r: u8 = 0x5e;
-    let mut g: u8 = 0x48;
-    let mut b: u8 = 0xe8;
+    let mut r: u8 = 0xf9;
+    let mut g: u8 = 0xd4;
+    let mut b: u8 = 0xa4;
     r = (r as f64 * light).floor() as u8;
     g = (g as f64 * light).floor() as u8;
     b = (b as f64 * light).floor() as u8;
@@ -128,7 +128,7 @@ impl RenderState {
                 } else if y <= RENDER_HEIGHT_MID {
                     [0xff, 0xff, 0xff, 0xff]
                 }  else {
-                    [0x00, 0x00, 0x00, 0xff]
+                    [0xbc, 0x78, 0xa2, 0xff]
                 }
             };
 

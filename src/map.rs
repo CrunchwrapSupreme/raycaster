@@ -42,6 +42,8 @@ impl BlockMap {
             self.blocks[ldx] = BlockType::WALL;
             self.blocks[rdx] = BlockType::WALL;
         }
+        let idx = self.xy_to_index(2, 3);
+        self.blocks[idx] = BlockType::WALL;
     }
 
     #[allow(dead_code)]
@@ -149,7 +151,7 @@ mod tests {
 
     #[test]
     fn populate_map() {
-        let mut map = BlockMap::new(3, 3);
+        let mut map = BlockMap::new(7, 7);
         map.populate_map();
         for x in 0..map.width {
             assert!(matches!(map.at(x, 0), Some(BlockType::WALL)));
