@@ -1,6 +1,7 @@
 use crate::map::{Vector2D, BlockMap};
 use winit_input_helper::WinitInputHelper;
 use winit::event::VirtualKeyCode;
+use rayon::prelude::*;
 use std::f64::consts::PI;
 use std::time;
 
@@ -105,7 +106,8 @@ impl RenderState {
             }
         }
 
-        for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
+        let frame_iter = frame.par_chunks_exact_mut(4).enumerate();
+        frame_iter.for_each(|(i, pixel)| {
             let x = (i % RENDER_WIDTH as usize) as u32;
             let y = (i / RENDER_WIDTH as usize) as u32;
             let cd = &columns[x as usize];
@@ -121,6 +123,6 @@ impl RenderState {
             };
 
             pixel.copy_from_slice(&col);
-        }
+        });
     }
 }
