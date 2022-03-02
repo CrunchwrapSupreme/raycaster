@@ -93,13 +93,16 @@ impl BlockMap {
 
         let mut f: f64;
         let mut found_block = false;
+        let mut shadow_face;
         loop {
             if len.y < len.x {
                 map_check.y += map_step.y;
+                shadow_face = map_step.y.signum() > 0;
                 f = len.y;
                 len.y += sy;
             } else {
                 map_check.x += map_step.x;
+                shadow_face = map_step.x.signum() > 0;
                 f = len.x;
                 len.x += sx;
             }
@@ -117,16 +120,18 @@ impl BlockMap {
         }
 
         let hit = Vector2::new(pos.x + dir.x * f, pos.y + dir.y * f);
+        let light = if shadow_face { 0.75 } else { 1.0 };
         if found_block {
             Some(BlockData {
                 hit: hit,
-                light: 1.0//(10.0 / hit.magnitude()).clamp(1.0, 0.1)
+                light: light
             })
         } else {
             None
         }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
