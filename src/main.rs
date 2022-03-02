@@ -32,7 +32,7 @@ fn main() -> Result<(), Error> {
         Pixels::new(render::RENDER_WIDTH, render::RENDER_HEIGHT, surface_texture)?
     };
     let mut world = render::RenderState::new();
-    window.set_cursor_grab(true).unwrap();
+    window.set_cursor_grab(false).unwrap();
     window.set_cursor_visible(false);
 
     event_loop.run(move |event, _, control_flow| {
