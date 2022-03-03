@@ -96,9 +96,8 @@ impl RenderState {
 
     pub fn render(&self, frame: &mut [u8]) {
         let view_dist = (1.0 / (FOV / 2.0).tan()) * RENDER_WIDTH as f64 / 2.0;
-        let mut columns: Vec<ColumnData> = Vec::with_capacity(RENDER_WIDTH as usize);
 
-        for x in 0..(RENDER_WIDTH) {
+        let col_iter = (0..RENDER_WIDTH).into_par_iter().map(|x| {
             let screenx = x as f64 - (RENDER_WIDTH_MID as f64 / 2.0);
             let angle = view_dist.atan2(screenx) - std::f64::consts::FRAC_PI_2;
             let dir = self.player.dir;
@@ -106,16 +105,18 @@ impl RenderState {
                                     dir.x * angle.sin() + dir.y * angle.cos()).normalize();
             let hit = self.room.cast_ray(self.player.pos, ray);
             match hit { // Move wall color computation here while we have ray info
-                Some(x) => columns.push(ColumnData {
+                Some(x) => ColumnData {
                     column: self.compute_column(x.hit),
                     light: x.light
-                }),
-                None => columns.push(ColumnData {
+                },
+                None => ColumnData {
                     column: u32::MAX..=u32::MAX,
                     light: 1.0
-                })
+                }
             }
-        }
+        });
+        let columns: Vec<ColumnData> = col_iter.collect();
+
 
         let frame_iter = frame.par_chunks_exact_mut(4).enumerate();
         frame_iter.for_each(|(i, pixel)| {
