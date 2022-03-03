@@ -11,8 +11,8 @@ pub enum BlockType {
 
 pub struct BlockMap {
     blocks: Vec<BlockType>,
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
 }
 
 pub struct BlockData {
