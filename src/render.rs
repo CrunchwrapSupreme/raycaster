@@ -3,19 +3,15 @@ use winit_input_helper::WinitInputHelper;
 use winit::event::VirtualKeyCode;
 use rayon::prelude::*;
 use std::f64::consts::PI;
-use std::time;
 
 pub const RENDER_WIDTH: u32 = 320 * 2;
 pub const RENDER_WIDTH_MID: u32 = (RENDER_WIDTH as f64 / 2.0) as u32;
 pub const RENDER_HEIGHT: u32 = 240 * 2;
 pub const RENDER_HEIGHT_MID: u32 = (RENDER_HEIGHT as f64 / 2.0) as u32;
-pub const FRAME_SLEEP: time::Duration = time::Duration::from_millis(10);
 
 const FOV: f64 = 60.0 * PI / 180.0;
-const MILLI_SLEEP: u32 = 50;
-const FRAME_DELTA: f64 = MILLI_SLEEP as f64 / 1000.0;
-const ROTATE_SPEED: f64 = PI * FRAME_DELTA;
-const FORWARD_SPEED: f64 = 2.0 * FRAME_DELTA;
+const ROTATE_SPEED: f64 = PI;
+const FORWARD_SPEED: f64 = 3.0;
 
 type ColumnRange = std::ops::RangeInclusive<u32>;
 struct ColumnData {
@@ -57,21 +53,21 @@ impl RenderState {
         }
     }
 
-    pub fn update(&mut self, input: &WinitInputHelper) {
+    pub fn update(&mut self, input: &WinitInputHelper, delta: f64) {
         let rotation: f64 = {
             if input.key_held(VirtualKeyCode::Right) {
-                ROTATE_SPEED * -1.0
+                delta * ROTATE_SPEED * -1.0
             } else if input.key_held(VirtualKeyCode::Left) {
-                ROTATE_SPEED
+                delta * ROTATE_SPEED
             } else {
                 0.0
             }
         };
         let pos_d: f64 = {
             if input.key_held(VirtualKeyCode::Up) {
-                FORWARD_SPEED
+                delta * FORWARD_SPEED
             } else if input.key_held(VirtualKeyCode::Down) {
-                FORWARD_SPEED * -1.0
+                delta * FORWARD_SPEED * -1.0
             } else {
                 0.0
             }
@@ -81,6 +77,8 @@ impl RenderState {
                                 old.x * rotation.sin() + old.y * rotation.cos());
         self.player.dir = new.normalize();
         self.player.pos += self.player.dir * pos_d;
+        self.player.pos.x = self.player.pos.x.clamp(0.0, self.room.width as f64);
+        self.player.pos.y = self.player.pos.y.clamp(0.0, self.room.height as f64);
     }
 
     fn compute_column(&self, hit: Vector2D) -> ColumnRange {

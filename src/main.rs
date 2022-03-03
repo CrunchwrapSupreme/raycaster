@@ -8,10 +8,12 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-use std::{thread};
+use std::time::{Instant};
+use std::{thread, time};
 
 const WIDTH: u32 = render::RENDER_WIDTH;
 const HEIGHT: u32 = render::RENDER_HEIGHT;
+const FRAME_SLEEP: f64 = 1.0 / 60.0;
 
 fn main() -> Result<(), Error> {
     let event_loop = EventLoop::new();
@@ -34,6 +36,7 @@ fn main() -> Result<(), Error> {
     let mut world = render::RenderState::new();
     window.set_cursor_grab(false).unwrap();
     window.set_cursor_visible(false);
+    let mut time_start = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         // Draw the current frame
@@ -62,9 +65,13 @@ fn main() -> Result<(), Error> {
                 pixels.resize_surface(size.width, size.height);
             }
 
-            // Update internal state and request a redraw
-            thread::sleep(render::FRAME_SLEEP);
-            world.update(&input);
+            let delta_t = Instant::now().duration_since(time_start);
+            let delta_t = delta_t.as_secs_f64();
+            time_start = Instant::now();
+            if FRAME_SLEEP > delta_t {
+                thread::sleep(time::Duration::from_secs_f64(FRAME_SLEEP - delta_t));
+            }
+            world.update(&input, delta_t);
             window.request_redraw();
         }
     });
