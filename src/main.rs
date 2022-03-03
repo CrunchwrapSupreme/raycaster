@@ -66,10 +66,11 @@ fn main() -> Result<(), Error> {
             }
 
             let delta_t = Instant::now().duration_since(time_start);
-            let delta_t = delta_t.as_secs_f64();
+            let mut delta_t = delta_t.as_secs_f64();
             time_start = Instant::now();
             if FRAME_SLEEP > delta_t {
                 thread::sleep(time::Duration::from_secs_f64(FRAME_SLEEP - delta_t));
+                delta_t = FRAME_SLEEP;
             }
             world.update(&input, delta_t);
             window.request_redraw();
