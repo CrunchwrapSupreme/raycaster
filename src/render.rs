@@ -76,7 +76,20 @@ impl RenderState {
         let new = Vector2D::new(old.x * rotation.cos() - old.y * rotation.sin(),
                                 old.x * rotation.sin() + old.y * rotation.cos());
         self.player.dir = new.normalize();
-        self.player.pos += self.player.dir * pos_d;
+        if pos_d.abs() > f64::EPSILON {
+            let move_dir = (self.player.dir * pos_d).normalize();
+            let dv = match self.room.cast_ray(self.player.pos, move_dir, 1.0) {
+                None => {
+                    pos_d
+                },
+                Some(x) => {
+                    let diff = ((x.hit - self.player.pos).magnitude() - 0.1).clamp(0.0, 1.0);
+                    let pos_clamp = pos_d.abs().clamp(0.0, diff);
+                    pos_clamp * pos_d.signum()
+                }
+            };
+            self.player.pos += self.player.dir * dv;
+        }
         self.player.pos.x = self.player.pos.x.clamp(0.0, self.room.width as f64);
         self.player.pos.y = self.player.pos.y.clamp(0.0, self.room.height as f64);
     }
