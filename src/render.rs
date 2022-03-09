@@ -76,7 +76,20 @@ impl RenderState {
         let new = Vector2D::new(old.x * rotation.cos() - old.y * rotation.sin(),
                                 old.x * rotation.sin() + old.y * rotation.cos());
         self.player.dir = new.normalize();
-        self.player.pos += self.player.dir * pos_d;
+        if pos_d.abs() > f64::EPSILON {
+            let move_dir = (self.player.dir * pos_d).normalize();
+            let dv = match self.room.cast_ray(self.player.pos, move_dir, 1.0) {
+                None => {
+                    pos_d
+                },
+                Some(x) => {
+                    let diff = ((x.hit - self.player.pos).magnitude() - 0.1).clamp(0.0, 1.0);
+                    let pos_clamp = pos_d.abs().clamp(0.0, diff);
+                    pos_clamp * pos_d.signum()
+                }
+            };
+            self.player.pos += self.player.dir * dv;
+        }
         self.player.pos.x = self.player.pos.x.clamp(0.0, self.room.width as f64);
         self.player.pos.y = self.player.pos.y.clamp(0.0, self.room.height as f64);
     }
@@ -93,15 +106,15 @@ impl RenderState {
     }
 
     pub fn render(&self, frame: &mut [u8]) {
-        let view_dist = (1.0 / (FOV / 2.0).tan()) * RENDER_WIDTH as f64 / 2.0;
+        let view_dist = (1.0 / (FOV / 2.0).tan()) * RENDER_WIDTH_MID as f64;
 
         let col_iter = (0..RENDER_WIDTH).into_par_iter().map(|x| {
-            let screenx = x as f64 - (RENDER_WIDTH_MID as f64 / 2.0);
+            let screenx = x as f64 - (RENDER_WIDTH_MID as f64);
             let angle = view_dist.atan2(screenx) - std::f64::consts::FRAC_PI_2;
             let dir = self.player.dir;
             let ray = Vector2D::new(dir.x * angle.cos() - dir.y * angle.sin(),
                                     dir.x * angle.sin() + dir.y * angle.cos()).normalize();
-            let hit = self.room.cast_ray(self.player.pos, ray);
+            let hit = self.room.cast_ray(self.player.pos, ray, f64::INFINITY);
             match hit { // Move wall color computation here while we have ray info
                 Some(x) => ColumnData {
                     column: self.compute_column(x.hit),
@@ -115,7 +128,6 @@ impl RenderState {
         });
         let columns: Vec<ColumnData> = col_iter.collect();
 
-
         let frame_iter = frame.par_chunks_exact_mut(4).enumerate();
         frame_iter.for_each(|(i, pixel)| {
             let x = (i % RENDER_WIDTH as usize) as u32;
@@ -123,7 +135,11 @@ impl RenderState {
             let cd = &columns[x as usize];
             let col = {
                 if cd.column.contains(&y) {
-                    compute_light(cd.light)
+                    if x == RENDER_WIDTH_MID {
+                        [0xff, 0x00, 0x00, 0xff]
+                    } else {
+                        compute_light(cd.light)
+                    }
                 } else if y <= RENDER_HEIGHT_MID {
                     [0xff, 0xff, 0xff, 0xff]
                 }  else {

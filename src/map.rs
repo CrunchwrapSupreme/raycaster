@@ -66,7 +66,7 @@ impl BlockMap {
         self.width * self.height
     }
 
-    pub fn cast_ray(&self, pos: Vector2D, dir: Vector2D) -> Option<BlockData> {
+    pub fn cast_ray(&self, pos: Vector2D, dir: Vector2D, max_len: f64) -> Option<BlockData> {
         let dydx = dir.y / dir.x;
         let dxdy = dir.x / dir.y;
         let sx = (1.0 + dydx * dydx).sqrt();
@@ -107,7 +107,9 @@ impl BlockMap {
                 len.x += sx;
             }
 
-            if !(0..self.width as i32).contains(&map_check.x) || !(0..self.height as i32).contains(&map_check.y) {
+            let not_in_map = !(0..self.width as i32).contains(&map_check.x) || !(0..self.height as i32).contains(&map_check.y);
+            let break_len = f > max_len;
+            if break_len || not_in_map {
                 break;
             }
 
